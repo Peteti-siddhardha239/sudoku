@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku Live Action — Ultra Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================================
+       CSS VARIABLES & THEMES
+       ======================================================== */
+    :root {
+      --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      /* Theme: Obsidian Neon (Default) */
+      --bg-base: #07090e;
+      --bg-gradient: radial-gradient(circle at 50% 10%, #151a2e 0%, #080a11 60%, #030508 100%);
+      --surface-1: rgba(18, 24, 38, 0.75);
+      --surface-2: rgba(28, 36, 56, 0.65);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-border-glow: rgba(0, 240, 255, 0.25);
+      
+      --text-main: #f1f5f9;
+      --text-muted: #8492a6;
+      --text-given: #e2e8f0;
+      --text-user: #00f0ff;
+      --text-notes: #7dd3fc;
+      
+      --primary: #00f0ff;
+      --primary-glow: rgba(0, 240, 255, 0.4);
+      --secondary: #8b5cf6;
+      --secondary-glow: rgba(139, 92, 246, 0.4);
+      --accent: #f43f5e;
+      --accent-glow: rgba(244, 63, 94, 0.4);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.4);
+      --warning: #f59e0b;
+      
+      --cell-bg: rgba(15, 21, 35, 0.6);
+      --cell-hover: rgba(30, 42, 68, 0.7);
+      --cell-selected: rgba(0, 240, 255, 0.22);
+      --cell-related: rgba(0, 240, 255, 0.06);
+      --cell-highlight: rgba(139, 92, 246, 0.25);
+      --cell-conflict: rgba(244, 63, 94, 0.35);
+      --cell-border: rgba(255, 255, 255, 0.05);
+      --subgrid-border: rgba(0, 240, 255, 0.45);
+      --board-glow: 0 10px 40px -10px rgba(0, 240, 255, 0.2);
+    }
+
+    [data-theme="synthwave"] {
+      --bg-base: #110724;
+      --bg-gradient: radial-gradient(circle at 50% 10%, #2a0845 0%, #110724 60%, #080312 100%);
+      --surface-1: rgba(35, 15, 60, 0.75);
+      --surface-2: rgba(55, 25, 90, 0.65);
+      --surface-border: rgba(255, 0, 128, 0.2);
+      --surface-border-glow: rgba(255, 0, 128, 0.4);
+      --text-main: #fdf2f8;
+      --text-muted: #c084fc;
+      --text-given: #fae8ff;
+      --text-user: #ff2a85;
+      --text-notes: #f472b6;
+      --primary: #ff2a85;
+      --primary-glow: rgba(255, 42, 133, 0.5);
+      --secondary: #ffb800;
+      --secondary-glow: rgba(255, 184, 0, 0.5);
+      --accent: #00f0ff;
+      --cell-bg: rgba(30, 12, 52, 0.6);
+      --cell-hover: rgba(55, 25, 90, 0.7);
+      --cell-selected: rgba(255, 42, 133, 0.25);
+      --cell-related: rgba(255, 42, 133, 0.08);
+      --cell-highlight: rgba(255, 184, 0, 0.25);
+      --cell-conflict: rgba(255, 0, 85, 0.4);
+      --subgrid-border: rgba(255, 42, 133, 0.6);
+      --board-glow: 0 10px 40px -10px rgba(255, 42, 133, 0.3);
+    }
+
+    [data-theme="matrix"] {
+      --bg-base: #030d09;
+      --bg-gradient: radial-gradient(circle at 50% 10%, #062b1a 0%, #030d09 60%, #010503 100%);
+      --surface-1: rgba(6, 28, 18, 0.75);
+      --surface-2: rgba(12, 45, 30, 0.65);
+      --surface-border: rgba(16, 185, 129, 0.2);
+      --surface-border-glow: rgba(16, 185, 129, 0.4);
+      --text-main: #ecfdf5;
+      --text-muted: #6ee7b7;
+      --text-given: #d1fae5;
+      --text-user: #10b981;
+      --text-notes: #34d399;
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.5);
+      --secondary: #06b6d4;
+      --secondary-glow: rgba(6, 182, 212, 0.5);
+      --accent: #f43f5e;
+      --cell-bg: rgba(5, 22, 14, 0.65);
+      --cell-hover: rgba(14, 48, 32, 0.7);
+      --cell-selected: rgba(16, 185, 129, 0.25);
+      --cell-related: rgba(16, 185, 129, 0.08);
+      --cell-highlight: rgba(6, 182, 212, 0.25);
+      --cell-conflict: rgba(244, 63, 94, 0.4);
+      --subgrid-border: rgba(16, 185, 129, 0.6);
+      --board-glow: 0 10px 40px -10px rgba(16, 185, 129, 0.25);
+    }
+
+    [data-theme="opal"] {
+      --bg-base: #f1f5f9;
+      --bg-gradient: radial-gradient(circle at 50% 10%, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
+      --surface-1: rgba(255, 255, 255, 0.85);
+      --surface-2: rgba(241, 245, 249, 0.9);
+      --surface-border: rgba(15, 23, 42, 0.08);
+      --surface-border-glow: rgba(14, 116, 144, 0.3);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-given: #0f172a;
+      --text-user: #0284c7;
+      --text-notes: #0369a1;
+      --primary: #0284c7;
+      --primary-glow: rgba(2, 132, 199, 0.3);
+      --secondary: #7c3aed;
+      --secondary-glow: rgba(124, 58, 237, 0.3);
+      --accent: #e11d48;
+      --cell-bg: rgba(255, 255, 255, 0.9);
+      --cell-hover: rgba(241, 245, 249, 0.95);
+      --cell-selected: rgba(2, 132, 199, 0.2);
+      --cell-related: rgba(2, 132, 199, 0.07);
+      --cell-highlight: rgba(124, 58, 237, 0.18);
+      --cell-conflict: rgba(225, 29, 72, 0.25);
+      --cell-border: rgba(15, 23, 42, 0.1);
+      --subgrid-border: rgba(2, 132, 199, 0.7);
+      --board-glow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ========================================================
+       GLOBAL & RESET
+       ======================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--bg-base);
+      background-image: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      position: relative;
+      padding: 12px;
+    }
+
+    #fx-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* ========================================================
+       APP CONTAINER & LAYOUT
+       ======================================================== */
+    .app-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 980px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ========================================================
+       TOP NAVIGATION BAR
+       ======================================================== */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 18px;
+      background: var(--surface-1);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--surface-border);
+      border-radius: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 19px;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-live {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #f43f5e, #ff0055);
+      color: #ffffff;
+      -webkit-text-fill-color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px rgba(244, 63, 94, 0.6);
+      animation: pulseLive 1.5s infinite;
+    }
+
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.97); }
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      background: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-icon:hover {
+      background: var(--surface-border);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* ========================================================
+       LIVE ACTION STATUS / HUD
+       ======================================================== */
+    .hud-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .hud-card {
+      background: var(--surface-1);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hud-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    .hud-card.hud-accent::after {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .hud-card.hud-secondary::after {
+      background: var(--secondary);
+      box-shadow: 0 0 8px var(--secondary);
+    }
+
+    .hud-card.hud-success::after {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .hud-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hud-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    /* Combo Fire Progress Bar */
+    .combo-meter {
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .combo-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f59e0b, #f43f5e, #ec4899);
+      transition: width 0.15s linear;
+      box-shadow: 0 0 8px #f43f5e;
+    }
+
+    .hearts-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .heart-icon {
+      font-size: 1rem;
+      filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.6));
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .heart-icon.lost {
+      filter: grayscale(1) opacity(0.3);
+      transform: scale(0.85);
+    }
+
+    /* ========================================================
+       MAIN PLAYGROUND LAYOUT (BOARD + CONTROLS)
+       ======================================================== */
+    .play-layout {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    /* Sudoku Board Frame */
+    .board-container {
+      position: relative;
+      padding: 10px;
+      background: var(--surface-1);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--surface-border);
+      border-radius: 22px;
+      box-shadow: var(--board-glow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Live Solver Scanner Overlay Effect */
+    .solver-beam {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--primary), #ffffff, var(--primary), transparent);
+      box-shadow: 0 0 15px var(--primary);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+      transition: top 0.05s linear;
+    }
+
+    .solver-beam.active {
+      opacity: 1;
+    }
+
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      gap: 1px;
+      background: var(--cell-border);
+      border: 2px solid var(--subgrid-border);
+      border-radius: 12px;
+      overflow: hidden;
+      width: min(88vw, 470px);
+      height: min(88vw, 470px);
+    }
+
+    /* Grid Cell */
+    .cell {
+      position: relative;
+      background: var(--cell-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.2rem, 3.8vw, 1.8rem);
+      font-weight: 700;
+      font-family: var(--font-main);
+      color: var(--text-user);
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+    }
+
+    .cell.given {
+      color: var(--text-given);
+      font-weight: 800;
+    }
+
+    /* Subgrid 3x3 Division Borders */
+    .cell:nth-child(3n) {
+      border-right: 2px solid var(--subgrid-border);
+    }
+    .cell:nth-child(9n) {
+      border-right: none;
+    }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) {
+      border-bottom: 2px solid var(--subgrid-border);
+    }
+
+    /* Cell States & Highlighting */
+    .cell:hover:not(.given-fixed) {
+      background: var(--cell-hover);
+    }
+
+    .cell.selected {
+      background: var(--cell-selected) !important;
+      box-shadow: inset 0 0 0 2px var(--primary);
+      z-index: 2;
+    }
+
+    .cell.related {
+      background: var(--cell-related);
+    }
+
+    .cell.same-digit {
+      background: var(--cell-highlight);
+      color: #ffffff;
+      text-shadow: 0 0 10px var(--secondary-glow);
+    }
+
+    .cell.conflict {
+      background: var(--cell-conflict) !important;
+      color: #ff4d6d !important;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .cell.solved-flash {
+      animation: flashSuccess 0.5s ease-out;
+    }
+
+    .cell.ai-scanning {
+      background: rgba(0, 240, 255, 0.4) !important;
+      box-shadow: 0 0 14px var(--primary);
+    }
+
+    .cell.ai-backtracking {
+      background: rgba(244, 63, 94, 0.45) !important;
+    }
+
+    @keyframes flashSuccess {
+      0% { transform: scale(1.15); background: var(--success); color: #fff; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* Cell Notes Grid (Pencil Marks) */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      width: 90%;
+      height: 90%;
+      position: absolute;
+      top: 5%;
+      left: 5%;
+      pointer-events: none;
+    }
+
+    .note-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.55rem, 1.4vw, 0.75rem);
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-notes);
+      opacity: 0;
+      transition: opacity 0.1s ease;
+    }
+
+    .note-item.visible {
+      opacity: 1;
+    }
+
+    /* Floating Score Popups */
+    .floating-popup {
+      position: absolute;
+      pointer-events: none;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #ffb800;
+      text-shadow: 0 0 10px rgba(255, 184, 0, 0.8), 0 2px 4px rgba(0,0,0,0.8);
+      animation: floatUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 0) scale(0.7);
+      }
+      20% {
+        opacity: 1;
+        transform: translate(-50%, -15px) scale(1.2);
+      }
+      80% {
+        opacity: 1;
+        transform: translate(-50%, -40px) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -55px) scale(0.9);
+      }
+    }
+
+    /* ========================================================
+       SIDEBAR & CONTROL PANELS
+       ======================================================== */
+    .side-panel {
+      flex: 1;
+      min-width: 280px;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Mode & Difficulty Selector Card */
+    .panel-card {
+      background: var(--surface-1);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--surface-border);
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .diff-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .diff-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      padding: 7px 4px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .diff-btn:hover {
+      background: var(--surface-border);
+      color: var(--text-main);
+    }
+
+    .diff-btn.active {
+      background: var(--primary);
+      color: #030508;
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* Action Buttons (Undo, Erase, Notes, Hint) */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .tool-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 10px 4px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .tool-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .tool-btn:hover {
+      background: var(--surface-border);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .tool-btn.active {
+      background: var(--primary);
+      color: #030508;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .tool-btn .badge-pill {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 10px;
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    /* Keypad 1-9 */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .key-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 12px 0;
+      color: var(--text-main);
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-main);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: all 0.12s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .key-btn:hover {
+      background: var(--cell-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .key-btn:active {
+      transform: scale(0.95);
+    }
+
+    .key-btn .key-count {
+      font-size: 0.65rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .key-btn.completed {
+      opacity: 0.35;
+      pointer-events: none;
+      filter: grayscale(1);
+    }
+
+    /* Live AI Visual Auto-Solver Control Panel */
+    .ai-solver-panel {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(139, 92, 246, 0.08));
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .solver-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .solver-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .solver-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-primary {
+      background: linear-gradient(135deg, var(--primary), #00b4d8);
+      color: #030508;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .btn-action-primary:hover {
+      box-shadow: 0 0 18px var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .btn-action-secondary {
+      background: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+    }
+
+    .btn-action-secondary:hover {
+      background: var(--surface-border);
+    }
+
+    .speed-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .speed-slider {
+      flex: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* ========================================================
+       MODALS & DIALOGS
+       ======================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(3, 5, 8, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--surface-1);
+      border: 1px solid var(--surface-border-glow);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 440px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transform: scale(0.92) translateY(10px);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.open .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+      transition: color 0.15s ease;
+    }
+
+    .btn-close:hover {
+      color: var(--text-main);
+    }
+
+    /* Victory Modal Stats */
+    .victory-badge {
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+    }
+
+    .victory-rank {
+      font-size: 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: -10px;
+    }
+
+    .victory-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      background: var(--surface-2);
+      padding: 12px;
+      border-radius: 14px;
+    }
+
+    .v-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .v-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .v-val {
+      font-size: 1.15rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--primary);
+    }
+
+    /* Smart Hint Toast */
+    .hint-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--surface-1);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-glow);
+      padding: 14px 20px;
+      border-radius: 16px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 90vw;
+      width: 480px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .hint-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .hint-text {
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+
+    .hint-text strong {
+      color: var(--primary);
+    }
+
+    /* Setting Options List */
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .setting-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .setting-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--surface-2);
+      border: 1px solid var(--surface-border);
+      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background-color: #030508;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 820px) {
+      .play-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+      .side-panel {
+        max-width: min(88vw, 470px);
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body data-theme="neon">
+
+  <!-- FX Background Canvas for Floating Ambient Orbs & Confetti -->
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="fx-canvas"></canvas>
+
+  <div class="app-wrapper">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-bar">
+      <div class="brand-title">
+        <div class="brand-icon">S</div>
+        <div class="brand-text">
+          SUDOKU <span class="badge-live">LIVE ACTION</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <!-- Audio Mute Toggle -->
+        <button id="btn-audio" class="btn-icon" title="Toggle Sound FX">
+          <svg id="icon-sound" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+        <!-- Theme Cycle Toggle -->
+        <button id="btn-theme" class="btn-icon" title="Switch Theme">
+          <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.67 10.57 20 12 20c4.97 0 9-4.03 9-9 0-4.97-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+        </button>
+        <!-- Rules / Help -->
+        <button id="btn-rules" class="btn-icon" title="How to Play & Live Mode Rules">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+        </button>
+        <!-- Settings -->
+        <button id="btn-settings" class="btn-icon" title="Settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- LIVE ACTION HUD & STATS BAR -->
+    <div class="hud-bar">
+      <!-- Live Score -->
+      <div class="hud-card">
+        <div class="hud-label">
+          <span>Score</span>
+          <span id="score-delta" style="color:var(--warning);"></span>
+        </div>
+        <div class="hud-val" id="hud-score">0</div>
+      </div>
+      <!-- Live Combo Multiplier -->
+      <div class="hud-card hud-accent">
+        <div class="hud-label">
+          <span>Combo Streak</span>
+          <span id="combo-rank" style="color:var(--accent); font-weight:800;">READY</span>
+        </div>
+        <div class="hud-val" id="hud-combo">1.0x</div>
+        <div class="combo-meter">
+          <div class="combo-fill" id="combo-fill"></div>
+        </div>
+      </div>
+      <!-- Timer (Zen or Action Blitz) -->
+      <div class="hud-card hud-secondary">
+        <div class="hud-label">
+          <span id="timer-label">Time</span>
+          <span id="btn-pause-timer" style="cursor:pointer;" title="Pause/Resume">⏸</span>
+        </div>
+        <div class="hud-val" id="hud-timer">00:00</div>
+      </div>
+      <!-- Mistakes / Strikes -->
+      <div class="hud-card hud-success">
+        <div class="hud-label">
+          <span>Mistakes</span>
+          <span id="mistake-limit-label">3 MAX</span>
+        </div>
+        <div class="hearts-row" id="hearts-container">
+          <span class="heart-icon">❤️</span>
+          <span class="heart-icon">❤️</span>
+          <span class="heart-icon">❤️</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN PLAYGROUND -->
+    <div class="play-layout">
+      <!-- SUDOKU BOARD -->
+      <div class="board-container">
+        <!-- Live AI Solver Beam -->
+        <div id="solver-beam" class="solver-beam"></div>
+        <!-- 9x9 Grid -->
+        <div id="sudoku-grid" class="sudoku-grid">
+          <!-- 81 cells will be rendered here dynamically -->
+        </div>
+      </div>
+
+      <!-- SIDEBAR CONTROLS -->
+      <div class="side-panel">
+        <!-- Difficulty & New Game Selector -->
+        <div class="panel-card">
+          <div class="card-title">
+            <span>Difficulty Level</span>
+            <button id="btn-new-game" class="btn-action btn-action-primary" style="padding:4px 10px; font-size:0.75rem;">
+              ⚡ New Game
+            </button>
+          </div>
+          <div class="diff-selector">
+            <button class="diff-btn active" data-diff="easy">Easy</button>
+            <button class="diff-btn" data-diff="medium">Medium</button>
+            <button class="diff-btn" data-diff="hard">Hard</button>
+            <button class="diff-btn" data-diff="expert">Expert</button>
+          </div>
+        </div>
+
+        <!-- Gameplay Action Tools -->
+        <div class="panel-card">
+          <div class="tools-grid">
+            <button id="btn-undo" class="tool-btn" title="Undo Move (Ctrl+Z)">
+              <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+              <span>Undo</span>
+            </button>
+            <button id="btn-erase" class="tool-btn" title="Erase Cell (Del/Backspace)">
+              <svg viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.5H2v-2l8.83-8.83 4.24-4.24c.79-.79 2.05-.79 2.84 0l.33.33zM7.76 18.5l9.9-9.9-2.83-2.83-9.9 9.9 2.83 2.83z"/></svg>
+              <span>Erase</span>
+            </button>
+            <button id="btn-notes" class="tool-btn" title="Pencil Notes Mode (Press N)">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span>Notes</span>
+              <span id="notes-badge" class="badge-pill" style="display:none;">ON</span>
+            </button>
+            <button id="btn-hint" class="tool-btn" title="Smart Hint (Press H)">
+              <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+              <span>Hint</span>
+              <span id="hint-count-badge" class="badge-pill">3</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Virtual Keypad (1 to 9) -->
+        <div class="panel-card">
+          <div class="card-title">
+            <span>Input Keypad</span>
+            <span style="font-size:0.7rem; color:var(--text-muted);">Keyboard 1-9</span>
+          </div>
+          <div class="keypad-grid" id="keypad">
+            <!-- 9 keypad buttons dynamically populated with counts remaining -->
+          </div>
+        </div>
+
+        <!-- LIVE AI AUTO-SOLVER VISUALIZER HUD -->
+        <div class="ai-solver-panel">
+          <div class="solver-header">
+            <div class="solver-title">
+              <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+              <span>Live AI Auto-Solver</span>
+            </div>
+            <span id="solver-status" style="font-size:0.7rem; font-family:var(--font-mono); color:var(--text-muted);">STANDBY</span>
+          </div>
+
+          <div class="solver-controls">
+            <button id="btn-ai-solve" class="btn-action btn-action-primary">
+              ▶ Live Action Solve
+            </button>
+            <button id="btn-ai-pause" class="btn-action btn-action-secondary" style="display:none;">
+              ⏸ Pause
+            </button>
+            <button id="btn-ai-step" class="btn-action btn-action-secondary" title="Single step">
+              ⏭ Step
+            </button>
+          </div>
+
+          <div class="speed-slider-wrap">
+            <span>Speed</span>
+            <input type="range" id="solver-speed" class="speed-slider" min="1" max="100" value="70">
+            <span id="speed-label" style="font-family:var(--font-mono); min-width:35px;">Fast</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- VICTORY CELEBRATION MODAL -->
+  <div class="modal-overlay" id="victory-modal">
+    <div class="modal-card">
+      <div class="victory-badge" id="vic-badge">S+ RANK</div>
+      <div class="victory-rank">PUZZLE COMPLETED!</div>
+      
+      <div class="victory-stats-grid">
+        <div class="v-stat">
+          <span class="v-label">Total Score</span>
+          <span class="v-val" id="vic-score">14,250</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-label">Completion Time</span>
+          <span class="v-val" id="vic-time">03:42</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-label">Max Combo</span>
+          <span class="v-val" id="vic-combo">5.0x</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-label">Accuracy</span>
+          <span class="v-val" id="vic-accuracy">98%</span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="btn-vic-next" class="btn-action btn-action-primary" style="padding:12px;">
+          Next Difficulty
+        </button>
+        <button id="btn-vic-replay" class="btn-action btn-action-secondary" style="padding:12px;">
+          Play Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER / RESTART MODAL -->
+  <div class="modal-overlay" id="gameover-modal">
+    <div class="modal-card" style="text-align:center;">
+      <div style="font-size:3rem;">💥</div>
+      <div class="modal-title" style="color:var(--accent);">3 MISTAKES REACHED!</div>
+      <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+        You've run out of strikes in Hardcore Mode. Would you like to retry this board or start fresh?
+      </p>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button id="btn-restart-retry" class="btn-action btn-action-primary" style="padding:12px;">
+          Retry Board
+        </button>
+        <button id="btn-restart-new" class="btn-action btn-action-secondary" style="padding:12px;">
+          New Puzzle
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Settings & Options</div>
+        <button class="btn-close" id="btn-close-settings">&times;</button>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-name">Game Mode</div>
+          <div class="setting-desc">Zen (Relaxed) or Action Blitz (Timer Rush)</div>
+        </div>
+        <select id="setting-gamemode" style="background:var(--surface-2); border:1px solid var(--surface-border); color:var(--text-main); padding:6px 10px; border-radius:8px; font-weight:600;">
+          <option value="zen">Zen Mode</option>
+          <option value="blitz">Action Blitz</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-name">3 Strikes Limit</div>
+          <div class="setting-desc">Game over after 3 mistakes</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setting-strikes" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-name">Auto-Remove Notes</div>
+          <div class="setting-desc">Erase pencil notes when a number is placed</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setting-autonotes" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-name">Highlight Same Numbers</div>
+          <div class="setting-desc">Glow identical numbers across grid</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setting-highlight-same" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-name">Sound Effects</div>
+          <div class="setting-desc">Dynamic synthesizer chimes & fanfares</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="setting-sound" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULES & CONTROLS MODAL -->
+  <div class="modal-overlay" id="rules-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">How to Play & Live Action</div>
+        <button class="btn-close" id="btn-close-rules">&times;</button>
+      </div>
+      <div style="font-size:0.85rem; color:var(--text-muted); display:flex; flex-direction:column; gap:10px; line-height:1.5;">
+        <p><strong style="color:var(--primary);">Standard Sudoku:</strong> Fill each row, column, and 3x3 box with digits 1 through 9 without repeating.</p>
+        <p><strong style="color:var(--accent);">Live Action Combo:</strong> Correct moves build your Combo Multiplier! The meter drains over time, so place numbers swiftly to achieve <strong>5x MAX COMBO</strong> and S+ ranks.</p>
+        <p><strong style="color:var(--secondary);">Live AI Visual Solver:</strong> Watch the computer solve any puzzle with live backtracking scans! Adjust solver speed and pause at any time.</p>
+        <p><strong style="color:var(--text-main);">Controls:</strong> Click cells or use <kbd>Arrow / WASD</kbd> keys. Type <kbd>1-9</kbd> to enter numbers, <kbd>N</kbd> for Notes, <kbd>H</kbd> for Hint, and <kbd>Ctrl+Z</kbd> for Undo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMART HINT EXPLAINER TOAST -->
+  <div id="hint-toast" class="hint-toast">
+    <div class="hint-text" id="hint-text">
+      <strong>Smart Hint:</strong> Calculating best deduction...
+    </div>
+    <button id="btn-apply-hint" class="btn-action btn-action-primary" style="padding:6px 12px; font-size:0.75rem; white-space:nowrap;">
+      Apply
+    </button>
+  </div>
+
+  <!-- ========================================================
+       JAVASCRIPT GAME ENGINE
+       ======================================================== -->
+  <script>
+    /* --------------------------------------------------------
+       1. SYNTHESIZED AUDIO ENGINE (Web Audio API)
+       -------------------------------------------------------- */
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playNote(freq, type = 'sine', duration = 0.12, vol = 0.15) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+      click() {
+        this.playNote(480, 'triangle', 0.04, 0.08);
+      }
+      digit(num) {
+        // Musical note based on digit (pentatonic scale)
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+        const freq = notes[(num - 1) % 9] || 440;
+        this.playNote(freq, 'sine', 0.14, 0.18);
+      }
+      pencil() {
+        this.playNote(900, 'square', 0.03, 0.03);
+      }
+      error() {
+        this.playNote(150, 'sawtooth', 0.25, 0.2);
+      }
+      erase() {
+        this.playNote(220, 'sine', 0.08, 0.1);
+      }
+      combo(multiplier) {
+        const base = 400 + Math.min(multiplier, 5) * 100;
+        this.playNote(base, 'triangle', 0.2, 0.2);
+        setTimeout(() => this.playNote(base * 1.25, 'sine', 0.2, 0.2), 60);
+      }
+      hint() {
+        this.playNote(587.33, 'sine', 0.15, 0.15);
+        setTimeout(() => this.playNote(880, 'sine', 0.25, 0.2), 100);
+      }
+      victory() {
+        const arpeggio = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+        arpeggio.forEach((f, idx) => {
+          setTimeout(() => this.playNote(f, 'triangle', 0.35, 0.25), idx * 110);
+        });
+      }
+    }
+    const audio = new AudioEngine();
+
+    /* --------------------------------------------------------
+       2. CANVAS FX (PARTICLES & CELEBRATION CONFETTI)
+       -------------------------------------------------------- */
+    class FXEngine {
+      constructor() {
+        this.bgCanvas = document.getElementById('bg-canvas');
+        this.fxCanvas = document.getElementById('fx-canvas');
+        this.bgCtx = this.bgCanvas.getContext('2d');
+        this.fxCtx = this.fxCanvas.getContext('2d');
+        this.particles = [];
+        this.bgOrbs = [];
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.initBgOrbs();
+        this.loop = this.loop.bind(this);
+        requestAnimationFrame(this.loop);
+      }
+      resize() {
+        this.w = window.innerWidth;
+        this.h = window.innerHeight;
+        this.bgCanvas.width = this.w;
+        this.bgCanvas.height = this.h;
+        this.fxCanvas.width = this.w;
+        this.fxCanvas.height = this.h;
+      }
+      initBgOrbs() {
+        this.bgOrbs = [];
+        for (let i = 0; i < 28; i++) {
+          this.bgOrbs.push({
+            x: Math.random() * this.w,
+            y: Math.random() * this.h,
+            r: Math.random() * 3 + 1,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            alpha: Math.random() * 0.5 + 0.2
+          });
+        }
+      }
+      spawnCellBurst(x, y, color = '#00f0ff', count = 18) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5 + 2;
+          this.particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: Math.random() * 3 + 2,
+            color,
+            alpha: 1,
+            decay: Math.random() * 0.03 + 0.02
+          });
+        }
+      }
+      spawnVictoryConfetti() {
+        const colors = ['#00f0ff', '#8b5cf6', '#f43f5e', '#ffd700', '#10b981', '#ffffff'];
+        for (let i = 0; i < 160; i++) {
+          this.particles.push({
+            x: this.w / 2 + (Math.random() - 0.5) * 200,
+            y: this.h / 2,
+            vx: (Math.random() - 0.5) * 16,
+            vy: Math.random() * -18 - 4,
+            gravity: 0.4,
+            r: Math.random() * 6 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1,
+            rotation: Math.random() * Math.PI,
+            rotSpeed: (Math.random() - 0.5) * 0.2,
+            decay: Math.random() * 0.008 + 0.004
+          });
+        }
+      }
+      loop() {
+        // Draw ambient floating background orbs
+        this.bgCtx.clearRect(0, 0, this.w, this.h);
+        this.bgCtx.fillStyle = '#00f0ff';
+        for (let orb of this.bgOrbs) {
+          orb.x += orb.vx;
+          orb.y += orb.vy;
+          if (orb.x < 0) orb.x = this.w;
+          if (orb.x > this.w) orb.x = 0;
+          if (orb.y < 0) orb.y = this.h;
+          if (orb.y > this.h) orb.y = 0;
+          this.bgCtx.beginPath();
+          this.bgCtx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+          this.bgCtx.fillStyle = `rgba(0, 240, 255, ${orb.alpha * 0.4})`;
+          this.bgCtx.fill();
+        }
+
+        // Draw foreground FX particles
+        this.fxCtx.clearRect(0, 0, this.w, this.h);
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.gravity) p.vy += p.gravity;
+          p.alpha -= p.decay;
+
+          if (p.alpha <= 0) {
+            this.particles.splice(i, 1);
+            continue;
+          }
+
+          this.fxCtx.save();
+          this.fxCtx.globalAlpha = p.alpha;
+          this.fxCtx.fillStyle = p.color;
+          this.fxCtx.shadowColor = p.color;
+          this.fxCtx.shadowBlur = 8;
+          if (p.rotation !== undefined) {
+            p.rotation += p.rotSpeed;
+            this.fxCtx.translate(p.x, p.y);
+            this.fxCtx.rotate(p.rotation);
+            this.fxCtx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 1.6);
+          } else {
+            this.fxCtx.beginPath();
+            this.fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            this.fxCtx.fill();
+          }
+          this.fxCtx.restore();
+        }
+
+        requestAnimationFrame(this.loop);
+      }
+    }
+    const fx = new FXEngine();
+
+    /* --------------------------------------------------------
+       3. FAST SOLVER & GUARANTEED GENERATOR ALGORITHMS
+       -------------------------------------------------------- */
+    function checkValid(board, r, c, val) {
+      for (let i = 0; i < 9; i++) {
+        if (board[r * 9 + i] === val && i !== c) return false;
+        if (board[i * 9 + c] === val && i !== r) return false;
+      }
+      const br = Math.floor(r / 3) * 3;
+      const bc = Math.floor(c / 3) * 3;
+      for (let dr = 0; dr < 3; dr++) {
+        for (let dc = 0; dc < 3; dc++) {
+          const idx = (br + dr) * 9 + (bc + dc);
+          if (idx !== (r * 9 + c) && board[idx] === val) return false;
+        }
+      }
+      return true;
+    }
+
+    function solveBacktracking(board) {
+      const emptyIdx = board.indexOf(0);
+      if (emptyIdx === -1) return true;
+      const r = Math.floor(emptyIdx / 9), c = emptyIdx % 9;
+      const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+      for (let d of digits) {
+        if (checkValid(board, r, c, d)) {
+          board[emptyIdx] = d;
+          if (solveBacktracking(board)) return true;
+          board[emptyIdx] = 0;
+        }
+      }
+      return false;
+    }
+
+    function countSolutions(board, limit = 2) {
+      let count = 0;
+      function solve(pos) {
+        while (pos < 81 && board[pos] !== 0) pos++;
+        if (pos === 81) {
+          count++;
+          return;
+        }
+        const r = Math.floor(pos / 9), c = pos % 9;
+        for (let num = 1; num <= 9; num++) {
+          if (checkValid(board, r, c, num)) {
+            board[pos] = num;
+            solve(pos + 1);
+            board[pos] = 0;
+            if (count >= limit) return;
+          }
+        }
+      }
+      solve(0);
+      return count;
+    }
+
+    function generateSudokuPuzzle(targetClues) {
+      const full = new Array(81).fill(0);
+      // Fill the 3 independent diagonal boxes randomly for speed
+      for (let box = 0; box < 3; box++) {
+        const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+        const startR = box * 3, startC = box * 3;
+        let nIdx = 0;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            full[(startR + r) * 9 + (startC + c)] = nums[nIdx++];
+          }
+        }
+      }
+      solveBacktracking(full);
+
+      const puzzle = [...full];
+      const indices = Array.from({ length: 81 }, (_, i) => i).sort(() => Math.random() - 0.5);
+      let clues = 81;
+
+      for (let idx of indices) {
+        if (clues <= targetClues) break;
+        const temp = puzzle[idx];
+        puzzle[idx] = 0;
+        if (countSolutions(puzzle, 2) === 1) {
+          clues--;
+        } else {
+          puzzle[idx] = temp;
+        }
+      }
+      return { puzzle, solution: full, clues };
+    }
+
+    /* --------------------------------------------------------
+       4. GAME STATE & CONTROLLER
+       -------------------------------------------------------- */
+    class SudokuGame {
+      constructor() {
+        this.board = new Array(81).fill(0);
+        this.solution = new Array(81).fill(0);
+        this.initialGiven = new Array(81).fill(false);
+        this.notes = Array.from({ length: 81 }, () => new Set());
+        
+        this.selectedIdx = 0;
+        this.difficulty = 'easy';
+        this.notesMode = false;
+        this.history = [];
+        
+        // Live action stats
+        this.score = 0;
+        this.combo = 1.0;
+        this.comboTimer = null;
+        this.maxCombo = 1.0;
+        this.mistakes = 0;
+        this.maxMistakes = 3;
+        this.hintsRemaining = 3;
+        this.totalCorrect = 0;
+        this.totalMoves = 0;
+        
+        // Timer
+        this.secondsElapsed = 0;
+        this.timerInterval = null;
+        this.isPaused = false;
+        
+        // Settings
+        this.settings = {
+          gameMode: 'zen',
+          strikesLimit: true,
+          autoRemoveNotes: true,
+          highlightSame: true,
+          sound: true,
+          theme: 'neon'
+        };
+
+        // Live AI Solver Visualizer State
+        this.aiSolver = {
+          running: false,
+          paused: false,
+          speedMs: 25,
+          timeoutId: null,
+          stepsTaken: 0,
+          backtracks: 0
+        };
+
+        this.initDOM();
+        this.loadSettings();
+        this.newGame(this.difficulty);
+      }
+
+      initDOM() {
+        this.gridEl = document.getElementById('sudoku-grid');
+        this.keypadEl = document.getElementById('keypad');
+        this.beamEl = document.getElementById('solver-beam');
+
+        // Create 81 cell elements
+        this.cellEls = [];
+        this.gridEl.innerHTML = '';
+        for (let i = 0; i < 81; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.index = i;
+
+          // Notes mini 3x3 grid
+          const notesGrid = document.createElement('div');
+          notesGrid.className = 'notes-grid';
+          for (let n = 1; n <= 9; n++) {
+            const nItem = document.createElement('div');
+            nItem.className = 'note-item';
+            nItem.dataset.note = n;
+            nItem.textContent = n;
+            notesGrid.appendChild(nItem);
+          }
+          cell.appendChild(notesGrid);
+
+          // Digit text span
+          const span = document.createElement('span');
+          span.className = 'digit-text';
+          cell.appendChild(span);
+
+          cell.addEventListener('click', () => {
+            if (this.aiSolver.running) return;
+            this.selectCell(i);
+            audio.click();
+          });
+
+          this.gridEl.appendChild(cell);
+          this.cellEls.push(cell);
+        }
+
+        // Create Keypad buttons 1 to 9
+        this.keypadBtns = [];
+        this.keypadEl.innerHTML = '';
+        for (let num = 1; num <= 9; num++) {
+          const btn = document.createElement('button');
+          btn.className = 'key-btn';
+          btn.innerHTML = `<span>${num}</span><span class="key-count" id="count-${num}">9 left</span>`;
+          btn.addEventListener('click', () => {
+            if (this.aiSolver.running) return;
+            this.inputDigit(num);
+          });
+          this.keypadEl.appendChild(btn);
+          this.keypadBtns.push(btn);
+        }
+
+        // Event Listeners for Controls
+        document.getElementById('btn-undo').addEventListener('click', () => this.undo());
+        document.getElementById('btn-erase').addEventListener('click', () => this.erase());
+        document.getElementById('btn-notes').addEventListener('click', () => this.toggleNotes());
+        document.getElementById('btn-hint').addEventListener('click', () => this.requestHint());
+        document.getElementById('btn-apply-hint').addEventListener('click', () => this.applyHint());
+        document.getElementById('btn-pause-timer').addEventListener('click', () => this.togglePause());
+
+        // Difficulty Buttons
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            this.difficulty = e.target.dataset.diff;
+            this.newGame(this.difficulty);
+          });
+        });
+
+        document.getElementById('btn-new-game').addEventListener('click', () => this.newGame(this.difficulty));
+        
+        // Modals & Navigation
+        document.getElementById('btn-settings').addEventListener('click', () => this.openModal('settings-modal'));
+        document.getElementById('btn-close-settings').addEventListener('click', () => this.closeModal('settings-modal'));
+        document.getElementById('btn-rules').addEventListener('click', () => this.openModal('rules-modal'));
+        document.getElementById('btn-close-rules').addEventListener('click', () => this.closeModal('rules-modal'));
+        document.getElementById('btn-theme').addEventListener('click', () => this.cycleTheme());
+        document.getElementById('btn-audio').addEventListener('click', () => this.toggleSound());
+
+        document.getElementById('btn-restart-retry').addEventListener('click', () => {
+          this.closeModal('gameover-modal');
+          this.retryCurrentBoard();
+        });
+        document.getElementById('btn-restart-new').addEventListener('click', () => {
+          this.closeModal('gameover-modal');
+          this.newGame(this.difficulty);
+        });
+
+        document.getElementById('btn-vic-next').addEventListener('click', () => {
+          this.closeModal('victory-modal');
+          const diffs = ['easy', 'medium', 'hard', 'expert'];
+          const next = diffs[Math.min(diffs.indexOf(this.difficulty) + 1, diffs.length - 1)];
+          this.difficulty = next;
+          document.querySelectorAll('.diff-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.diff === next);
+          });
+          this.newGame(next);
+        });
+        document.getElementById('btn-vic-replay').addEventListener('click', () => {
+          this.closeModal('victory-modal');
+          this.newGame(this.difficulty);
+        });
+
+        // AI Solver Visualizer controls
+        document.getElementById('btn-ai-solve').addEventListener('click', () => this.startLiveAutoSolve());
+        document.getElementById('btn-ai-pause').addEventListener('click', () => this.toggleAISolvePause());
+        document.getElementById('btn-ai-step').addEventListener('click', () => this.stepAISolve());
+        
+        const speedSlider = document.getElementById('solver-speed');
+        speedSlider.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value);
+          // Inverse scale: 1 is slow (250ms), 100 is ultra fast (1ms)
+          this.aiSolver.speedMs = Math.round(250 - (val / 100) * 248);
+          const label = document.getElementById('speed-label');
+          if (val > 85) label.textContent = 'Turbo';
+          else if (val > 50) label.textContent = 'Fast';
+          else if (val > 25) label.textContent = 'Med';
+          else label.textContent = 'Slow';
+        });
+
+        // Settings Toggles
+        document.getElementById('setting-strikes').addEventListener('change', (e) => {
+          this.settings.strikesLimit = e.target.checked;
+          document.getElementById('mistake-limit-label').textContent = e.target.checked ? '3 MAX' : 'FREE';
+          this.saveSettings();
+        });
+        document.getElementById('setting-autonotes').addEventListener('change', (e) => {
+          this.settings.autoRemoveNotes = e.target.checked;
+          this.saveSettings();
+        });
+        document.getElementById('setting-highlight-same').addEventListener('change', (e) => {
+          this.settings.highlightSame = e.target.checked;
+          this.highlightCells();
+          this.saveSettings();
+        });
+        document.getElementById('setting-sound').addEventListener('change', (e) => {
+          this.settings.sound = e.target.checked;
+          audio.enabled = e.target.checked;
+          this.saveSettings();
+        });
+        document.getElementById('setting-gamemode').addEventListener('change', (e) => {
+          this.settings.gameMode = e.target.value;
+          this.saveSettings();
+          this.newGame(this.difficulty);
+        });
+
+        // Keyboard Controls
+        window.addEventListener('keydown', (e) => this.handleKeyboard(e));
+      }
+
+      newGame(diff = 'easy') {
+        this.stopAISolve();
+        this.difficulty = diff;
+        const targetClues = {
+          easy: 38,
+          medium: 32,
+          hard: 28,
+          expert: 24
+        }[diff] || 38;
+
+        const generated = generateSudokuPuzzle(targetClues);
+        this.board = [...generated.puzzle];
+        this.solution = [...generated.solution];
+        this.initialGiven = generated.puzzle.map(val => val !== 0);
+        this.notes = Array.from({ length: 81 }, () => new Set());
+        this.history = [];
+        
+        this.score = 0;
+        this.combo = 1.0;
+        this.maxCombo = 1.0;
+        this.mistakes = 0;
+        this.hintsRemaining = 3;
+        this.totalCorrect = 0;
+        this.totalMoves = 0;
+        this.isPaused = false;
+
+        this.selectedIdx = this.board.findIndex(v => v === 0);
+        if (this.selectedIdx === -1) this.selectedIdx = 0;
+
+        // Reset Timer
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        if (this.settings.gameMode === 'blitz') {
+          this.secondsElapsed = 90; // 90 seconds countdown in Action Blitz
+          document.getElementById('timer-label').textContent = 'Blitz Countdown';
+        } else {
+          this.secondsElapsed = 0;
+          document.getElementById('timer-label').textContent = 'Time';
+        }
+        this.startTimer();
+
+        this.updateHUD();
+        this.renderBoard();
+        this.highlightCells();
+      }
+
+      retryCurrentBoard() {
+        this.stopAISolve();
+        for (let i = 0; i < 81; i++) {
+          if (!this.initialGiven[i]) {
+            this.board[i] = 0;
+            this.notes[i].clear();
+          }
+        }
+        this.history = [];
+        this.mistakes = 0;
+        this.combo = 1.0;
+        this.updateHUD();
+        this.renderBoard();
+        this.highlightCells();
+      }
+
+      startTimer() {
+        this.timerInterval = setInterval(() => {
+          if (this.isPaused || this.aiSolver.running) return;
+
+          if (this.settings.gameMode === 'blitz') {
+            this.secondsElapsed--;
+            if (this.secondsElapsed <= 0) {
+              this.secondsElapsed = 0;
+              clearInterval(this.timerInterval);
+              this.openModal('gameover-modal');
+            }
+          } else {
+            this.secondsElapsed++;
+          }
+          this.updateTimerDisplay();
+        }, 1000);
+        this.updateTimerDisplay();
+      }
+
+      togglePause() {
+        this.isPaused = !this.isPaused;
+        const btn = document.getElementById('btn-pause-timer');
+        btn.textContent = this.isPaused ? '▶' : '⏸';
+      }
+
+      updateTimerDisplay() {
+        const m = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0');
+        const s = (this.secondsElapsed % 60).toString().padStart(2, '0');
+        document.getElementById('hud-timer').textContent = `${m}:${s}`;
+      }
+
+      selectCell(idx) {
+        this.selectedIdx = idx;
+        this.highlightCells();
+      }
+
+      inputDigit(num) {
+        if (this.selectedIdx === null || this.selectedIdx < 0) return;
+        if (this.initialGiven[this.selectedIdx]) return;
+
+        const idx = this.selectedIdx;
+        this.totalMoves++;
+
+        if (this.notesMode) {
+          // Toggle note
+          audio.pencil();
+          const cellNotes = this.notes[idx];
+          if (cellNotes.has(num)) cellNotes.delete(num);
+          else cellNotes.add(num);
+          this.renderCell(idx);
+          return;
+        }
+
+        // Normal digit placement
+        const correctVal = this.solution[idx];
+        if (num === correctVal) {
+          // CORRECT MOVE!
+          audio.digit(num);
+          this.history.push({ idx, oldVal: this.board[idx], newVal: num, notes: new Set(this.notes[idx]) });
+          this.board[idx] = num;
+          this.notes[idx].clear();
+          this.totalCorrect++;
+
+          // Auto-remove notes from conflicting row, column, and box
+          if (this.settings.autoRemoveNotes) {
+            this.autoPruneNotes(idx, num);
+          }
+
+          // Live Action Combo & Scoring
+          this.handleComboSuccess(idx);
+
+          // Visual spark burst & flash
+          const rect = this.cellEls[idx].getBoundingClientRect();
+          fx.spawnCellBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, '#00f0ff', 16);
+          this.cellEls[idx].classList.add('solved-flash');
+          setTimeout(() => this.cellEls[idx].classList.remove('solved-flash'), 400);
+
+          // In Action Blitz Mode, correct answers add +8s bonus time!
+          if (this.settings.gameMode === 'blitz') {
+            this.secondsElapsed += 8;
+            this.updateTimerDisplay();
+          }
+
+          this.renderCell(idx);
+          this.highlightCells();
+          this.updateHUD();
+
+          // Check if game won
+          this.checkWinCondition();
+
+        } else {
+          // MISTAKE!
+          audio.error();
+          this.mistakes++;
+          this.combo = 1.0;
+          this.updateComboHUD();
+
+          // Action Blitz penalizes -10s on mistake
+          if (this.settings.gameMode === 'blitz') {
+            this.secondsElapsed = Math.max(0, this.secondsElapsed - 10);
+            this.updateTimerDisplay();
+          }
+
+          // Conflict animation
+          this.cellEls[idx].classList.add('conflict');
+          setTimeout(() => this.cellEls[idx].classList.remove('conflict'), 500);
+
+          this.updateHUD();
+
+          if (this.settings.strikesLimit && this.mistakes >= this.maxMistakes) {
+            clearInterval(this.timerInterval);
+            this.openModal('gameover-modal');
+          }
+        }
+      }
+
+      handleComboSuccess(idx) {
+        // Build Combo Multiplier
+        this.combo = Math.min(5.0, +(this.combo + 0.5).toFixed(1));
+        if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+
+        const basePoints = 100;
+        const awarded = Math.round(basePoints * this.combo);
+        this.score += awarded;
+
+        // Sound enhancement for combo
+        if (this.combo > 1.5) {
+          audio.combo(this.combo);
+        }
+
+        // Floating Action Text
+        this.spawnFloatingScore(idx, `+${awarded} ${this.combo > 1.0 ? `(${this.combo}x)` : ''}`);
+
+        // Reset or restart combo drain timer (drains over 7 seconds)
+        if (this.comboTimer) clearTimeout(this.comboTimer);
+        this.updateComboHUD();
+        this.comboTimer = setTimeout(() => {
+          this.drainCombo();
+        }, 7000);
+      }
+
+      drainCombo() {
+        if (this.combo > 1.0) {
+          this.combo = 1.0;
+          this.updateComboHUD();
+        }
+      }
+
+      spawnFloatingScore(idx, text) {
+        const cell = this.cellEls[idx];
+        const popup = document.createElement('div');
+        popup.className = 'floating-popup';
+        popup.textContent = text;
+        popup.style.left = '50%';
+        popup.style.top = '30%';
+        cell.appendChild(popup);
+        setTimeout(() => popup.remove(), 900);
+      }
+
+      autoPruneNotes(idx, num) {
+        const r = Math.floor(idx / 9), c = idx % 9;
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 9; i++) {
+          this.notes[r * 9 + i].delete(num);
+          this.notes[i * 9 + c].delete(num);
+          this.renderCell(r * 9 + i);
+          this.renderCell(i * 9 + c);
+        }
+        for (let dr = 0; dr < 3; dr++) {
+          for (let dc = 0; dc < 3; dc++) {
+            const bIdx = (br + dr) * 9 + (bc + dc);
+            this.notes[bIdx].delete(num);
+            this.renderCell(bIdx);
+          }
+        }
+      }
+
+      erase() {
+        if (this.selectedIdx === null || this.initialGiven[this.selectedIdx]) return;
+        const idx = this.selectedIdx;
+        if (this.board[idx] !== 0 || this.notes[idx].size > 0) {
+          audio.erase();
+          this.history.push({ idx, oldVal: this.board[idx], newVal: 0, notes: new Set(this.notes[idx]) });
+          this.board[idx] = 0;
+          this.notes[idx].clear();
+          this.renderCell(idx);
+          this.highlightCells();
+          this.updateHUD();
+        }
+      }
+
+      undo() {
+        if (this.history.length === 0) return;
+        const last = this.history.pop();
+        this.board[last.idx] = last.oldVal;
+        this.notes[last.idx] = last.notes;
+        this.selectedIdx = last.idx;
+        audio.click();
+        this.renderCell(last.idx);
+        this.highlightCells();
+        this.updateHUD();
+      }
+
+      toggleNotes() {
+        this.notesMode = !this.notesMode;
+        const btn = document.getElementById('btn-notes');
+        const badge = document.getElementById('notes-badge');
+        btn.classList.toggle('active', this.notesMode);
+        badge.style.display = this.notesMode ? 'block' : 'none';
+        audio.click();
+      }
+
+      requestHint() {
+        if (this.hintsRemaining <= 0) return;
+        audio.hint();
+
+        // Find a logical single (naked or hidden single) or first empty cell
+        let targetIdx = -1;
+        let explanation = '';
+
+        for (let i = 0; i < 81; i++) {
+          if (this.board[i] === 0) {
+            const val = this.solution[i];
+            const r = Math.floor(i / 9) + 1;
+            const c = (i % 9) + 1;
+            const box = Math.floor((r - 1) / 3) * 3 + Math.floor((c - 1) / 3) + 1;
+            targetIdx = i;
+            explanation = `Row ${r}, Col ${c} (Box ${box}) must contain <strong>${val}</strong> because all other candidates are eliminated!`;
+            break;
+          }
+        }
+
+        if (targetIdx !== -1) {
+          this.selectedIdx = targetIdx;
+          this.highlightCells();
+          this.pendingHintIdx = targetIdx;
+
+          const toast = document.getElementById('hint-toast');
+          document.getElementById('hint-text').innerHTML = explanation;
+          toast.classList.add('show');
+        }
+      }
+
+      applyHint() {
+        const toast = document.getElementById('hint-toast');
+        toast.classList.remove('show');
+        if (this.pendingHintIdx !== undefined && this.pendingHintIdx !== null) {
+          this.hintsRemaining--;
+          document.getElementById('hint-count-badge').textContent = this.hintsRemaining;
+          this.selectedIdx = this.pendingHintIdx;
+          this.inputDigit(this.solution[this.pendingHintIdx]);
+          this.pendingHintIdx = null;
+        }
+      }
+
+      checkWinCondition() {
+        if (this.board.includes(0)) return;
+        for (let i = 0; i < 81; i++) {
+          if (this.board[i] !== this.solution[i]) return;
+        }
+
+        // VICTORY!
+        clearInterval(this.timerInterval);
+        audio.victory();
+        fx.spawnVictoryConfetti();
+
+        // Calculate Rank
+        let rank = 'S+ RANK';
+        const accuracy = Math.round((this.totalCorrect / Math.max(1, this.totalMoves)) * 100);
+        if (this.mistakes === 0 && this.secondsElapsed < 300) rank = 'S+ GODLIKE';
+        else if (this.mistakes <= 1) rank = 'S RANK';
+        else if (this.mistakes <= 2) rank = 'A RANK';
+        else rank = 'B RANK';
+
+        document.getElementById('vic-badge').textContent = rank;
+        document.getElementById('vic-score').textContent = this.score.toLocaleString();
+        const m = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0');
+        const s = (this.secondsElapsed % 60).toString().padStart(2, '0');
+        document.getElementById('vic-time').textContent = `${m}:${s}`;
+        document.getElementById('vic-combo').textContent = `${this.maxCombo}x`;
+        document.getElementById('vic-accuracy').textContent = `${accuracy}%`;
+
+        setTimeout(() => {
+          this.openModal('victory-modal');
+        }, 600);
+      }
+
+      renderBoard() {
+        for (let i = 0; i < 81; i++) {
+          this.renderCell(i);
+        }
+      }
+
+      renderCell(i) {
+        const cell = this.cellEls[i];
+        const val = this.board[i];
+        const textSpan = cell.querySelector('.digit-text');
+        const notesGrid = cell.querySelector('.notes-grid');
+
+        cell.classList.toggle('given', this.initialGiven[i]);
+
+        if (val !== 0) {
+          textSpan.textContent = val;
+          notesGrid.style.display = 'none';
+        } else {
+          textSpan.textContent = '';
+          notesGrid.style.display = 'grid';
+          const cellNotes = this.notes[i];
+          for (let n = 1; n <= 9; n++) {
+            const nItem = notesGrid.querySelector(`[data-note="${n}"]`);
+            nItem.classList.toggle('visible', cellNotes.has(n));
+          }
+        }
+      }
+
+      highlightCells() {
+        if (this.selectedIdx === null || this.selectedIdx < 0) return;
+        const selVal = this.board[this.selectedIdx];
+        const selR = Math.floor(this.selectedIdx / 9);
+        const selC = this.selectedIdx % 9;
+        const selBR = Math.floor(selR / 3) * 3;
+        const selBC = Math.floor(selC / 3) * 3;
+
+        for (let i = 0; i < 81; i++) {
+          const cell = this.cellEls[i];
+          cell.classList.remove('selected', 'related', 'same-digit');
+
+          if (i === this.selectedIdx) {
+            cell.classList.add('selected');
+            continue;
+          }
+
+          const r = Math.floor(i / 9);
+          const c = i % 9;
+          const br = Math.floor(r / 3) * 3;
+          const bc = Math.floor(c / 3) * 3;
+
+          const isRelated = (r === selR || c === selC || (br === selBR && bc === selBC));
+          if (isRelated) {
+            cell.classList.add('related');
+          }
+
+          if (this.settings.highlightSame && selVal !== 0 && this.board[i] === selVal) {
+            cell.classList.add('same-digit');
+          }
+        }
+      }
+
+      updateHUD() {
+        document.getElementById('hud-score').textContent = this.score.toLocaleString();
+        this.updateComboHUD();
+
+        // Update Hearts
+        const hearts = document.querySelectorAll('#hearts-container .heart-icon');
+        hearts.forEach((h, idx) => {
+          h.classList.toggle('lost', idx < this.mistakes);
+        });
+
+        // Update Keypad Remaining Counts
+        const counts = new Array(10).fill(0);
+        for (let val of this.board) {
+          if (val > 0) counts[val]++;
+        }
+        for (let d = 1; d <= 9; d++) {
+          const left = 9 - counts[d];
+          const countEl = document.getElementById(`count-${d}`);
+          const btn = this.keypadBtns[d - 1];
+          if (countEl) countEl.textContent = `${left} left`;
+          btn.classList.toggle('completed', left <= 0);
+        }
+      }
+
+      updateComboHUD() {
+        document.getElementById('hud-combo').textContent = `${this.combo.toFixed(1)}x`;
+        const fill = document.getElementById('combo-fill');
+        const pct = Math.min(100, ((this.combo - 1.0) / 4.0) * 100);
+        fill.style.width = `${pct}%`;
+
+        const rankEl = document.getElementById('combo-rank');
+        if (this.combo >= 4.5) rankEl.textContent = '🔥 GODLIKE!';
+        else if (this.combo >= 3.5) rankEl.textContent = '⚡ UNSTOPPABLE!';
+        else if (this.combo >= 2.5) rankEl.textContent = '💥 ON FIRE!';
+        else if (this.combo >= 1.5) rankEl.textContent = '✨ NICE STREAK!';
+        else rankEl.textContent = 'READY';
+      }
+
+      handleKeyboard(e) {
+        if (this.aiSolver.running) return;
+        const key = e.key;
+
+        // Navigation
+        if (key === 'ArrowUp' || key === 'w' || key === 'W') {
+          if (this.selectedIdx >= 9) this.selectCell(this.selectedIdx - 9);
+        } else if (key === 'ArrowDown' || key === 's' || key === 'S') {
+          if (this.selectedIdx <= 71) this.selectCell(this.selectedIdx + 9);
+        } else if (key === 'ArrowLeft' || key === 'a' || key === 'A') {
+          if (this.selectedIdx % 9 > 0) this.selectCell(this.selectedIdx - 1);
+        } else if (key === 'ArrowRight' || key === 'd' || key === 'D') {
+          if (this.selectedIdx % 9 < 8) this.selectCell(this.selectedIdx + 1);
+        }
+
+        // Numbers 1-9
+        if (key >= '1' && key <= '9') {
+          this.inputDigit(parseInt(key));
+        }
+
+        // Erase
+        if (key === 'Backspace' || key === 'Delete') {
+          this.erase();
+        }
+
+        // Notes Mode Toggle
+        if (key === 'n' || key === 'N') {
+          this.toggleNotes();
+        }
+
+        // Undo
+        if ((e.ctrlKey || e.metaKey) && (key === 'z' || key === 'Z')) {
+          e.preventDefault();
+          this.undo();
+        }
+
+        // Hint
+        if (key === 'h' || key === 'H') {
+          this.requestHint();
+        }
+      }
+
+      /* --------------------------------------------------------
+         5. LIVE AI AUTO-SOLVER VISUALIZER
+         -------------------------------------------------------- */
+      startLiveAutoSolve() {
+        if (this.aiSolver.running) return;
+
+        // Clear user edits and return to givens
+        for (let i = 0; i < 81; i++) {
+          if (!this.initialGiven[i]) {
+            this.board[i] = 0;
+            this.notes[i].clear();
+          }
+        }
+        this.renderBoard();
+        this.highlightCells();
+
+        this.aiSolver.running = true;
+        this.aiSolver.paused = false;
+        this.aiSolver.stepsTaken = 0;
+        this.aiSolver.backtracks = 0;
+        this.beamEl.classList.add('active');
+
+        document.getElementById('btn-ai-solve').style.display = 'none';
+        document.getElementById('btn-ai-pause').style.display = 'flex';
+        document.getElementById('solver-status').textContent = 'SOLVING...';
+
+        // Prepare solving execution stack
+        this.emptyCells = [];
+        for (let i = 0; i < 81; i++) {
+          if (this.board[i] === 0) this.emptyCells.push(i);
+        }
+        this.currentEmptyIdx = 0;
+        this.runAIStep();
+      }
+
+      runAIStep() {
+        if (!this.aiSolver.running || this.aiSolver.paused) return;
+
+        if (this.currentEmptyIdx >= this.emptyCells.length) {
+          // Finished solving!
+          this.finishAISolve();
+          return;
+        }
+
+        const cellPos = this.emptyCells[this.currentEmptyIdx];
+        const r = Math.floor(cellPos / 9), c = cellPos % 9;
+        let currentVal = this.board[cellPos];
+        let found = false;
+
+        // Move scanner beam
+        const rect = this.cellEls[cellPos].getBoundingClientRect();
+        const gridRect = this.gridEl.getBoundingClientRect();
+        this.beamEl.style.top = `${rect.top - gridRect.top + rect.height / 2}px`;
+
+        // Highlight scanned cell
+        this.cellEls.forEach(el => el.classList.remove('ai-scanning', 'ai-backtracking'));
+        this.cellEls[cellPos].classList.add('ai-scanning');
+
+        for (let testVal = currentVal + 1; testVal <= 9; testVal++) {
+          this.aiSolver.stepsTaken++;
+          if (checkValid(this.board, r, c, testVal)) {
+            this.board[cellPos] = testVal;
+            found = true;
+            this.renderCell(cellPos);
+            audio.digit(testVal);
+            break;
+          }
+        }
+
+        if (found) {
+          this.currentEmptyIdx++;
+        } else {
+          // Backtrack
+          this.aiSolver.backtracks++;
+          this.cellEls[cellPos].classList.add('ai-backtracking');
+          this.board[cellPos] = 0;
+          this.renderCell(cellPos);
+          this.currentEmptyIdx--;
+          if (this.currentEmptyIdx < 0) {
+            this.finishAISolve();
+            return;
+          }
+        }
+
+        this.aiSolver.timeoutId = setTimeout(() => {
+          this.runAIStep();
+        }, this.aiSolver.speedMs);
+      }
+
+      stepAISolve() {
+        if (!this.aiSolver.running) {
+          this.startLiveAutoSolve();
+          this.aiSolver.paused = true;
+          document.getElementById('btn-ai-pause').textContent = '▶ Resume';
+          document.getElementById('solver-status').textContent = 'PAUSED';
+          return;
+        }
+        this.aiSolver.paused = true;
+        this.runAIStep();
+      }
+
+      toggleAISolvePause() {
+        this.aiSolver.paused = !this.aiSolver.paused;
+        const btn = document.getElementById('btn-ai-pause');
+        btn.textContent = this.aiSolver.paused ? '▶ Resume' : '⏸ Pause';
+        document.getElementById('solver-status').textContent = this.aiSolver.paused ? 'PAUSED' : 'SOLVING...';
+        if (!this.aiSolver.paused) {
+          this.runAIStep();
+        }
+      }
+
+      finishAISolve() {
+        this.aiSolver.running = false;
+        this.aiSolver.paused = false;
+        clearTimeout(this.aiSolver.timeoutId);
+        this.beamEl.classList.remove('active');
+        this.cellEls.forEach(el => el.classList.remove('ai-scanning', 'ai-backtracking'));
+        document.getElementById('btn-ai-solve').style.display = 'flex';
+        document.getElementById('btn-ai-pause').style.display = 'none';
+        document.getElementById('solver-status').textContent = 'SOLVED';
+        audio.victory();
+        fx.spawnVictoryConfetti();
+      }
+
+      stopAISolve() {
+        this.aiSolver.running = false;
+        clearTimeout(this.aiSolver.timeoutId);
+        this.beamEl.classList.remove('active');
+        this.cellEls.forEach(el => el.classList.remove('ai-scanning', 'ai-backtracking'));
+        document.getElementById('btn-ai-solve').style.display = 'flex';
+        document.getElementById('btn-ai-pause').style.display = 'none';
+        document.getElementById('solver-status').textContent = 'STANDBY';
+      }
+
+      /* --------------------------------------------------------
+         6. THEMES & SETTINGS
+         -------------------------------------------------------- */
+      cycleTheme() {
+        const themes = ['neon', 'synthwave', 'matrix', 'opal'];
+        const currentIdx = themes.indexOf(this.settings.theme);
+        const next = themes[(currentIdx + 1) % themes.length];
+        this.setTheme(next);
+      }
+
+      setTheme(theme) {
+        this.settings.theme = theme;
+        document.body.dataset.theme = theme;
+        this.saveSettings();
+      }
+
+      toggleSound() {
+        this.settings.sound = !this.settings.sound;
+        audio.enabled = this.settings.sound;
+        const icon = document.getElementById('btn-audio');
+        icon.style.opacity = this.settings.sound ? '1' : '0.4';
+        this.saveSettings();
+      }
+
+      openModal(id) {
+        document.getElementById(id).classList.add('open');
+      }
+
+      closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+      }
+
+      saveSettings() {
+        try {
+          localStorage.setItem('sudoku_live_settings', JSON.stringify(this.settings));
+        } catch (e) {}
+      }
+
+      loadSettings() {
+        try {
+          const s = localStorage.getItem('sudoku_live_settings');
+          if (s) {
+            this.settings = Object.assign(this.settings, JSON.parse(s));
+            this.setTheme(this.settings.theme);
+            audio.enabled = this.settings.sound;
+            document.getElementById('setting-strikes').checked = this.settings.strikesLimit;
+            document.getElementById('setting-autonotes').checked = this.settings.autoRemoveNotes;
+            document.getElementById('setting-highlight-same').checked = this.settings.highlightSame;
+            document.getElementById('setting-sound').checked = this.settings.sound;
+            document.getElementById('setting-gamemode').value = this.settings.gameMode;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Initialize Game
+    window.addEventListener('DOMContentLoaded', () => {
+      window.game = new SudokuGame();
+    });
+  </script>
+</body>
+</html>
